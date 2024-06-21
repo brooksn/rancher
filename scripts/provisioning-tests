@@ -72,6 +72,7 @@ export CATTLE_CHART_DEFAULT_URL=https://github.com/rancher/charts
 fi
 
 echo "Starting rancher server for provisioning-tests using $SOME_K8S_VERSION"
+# mkdir -p build/testdata
 touch /tmp/rancher.log
 
 mkdir -p /var/lib/rancher/$DIST/agent/images
@@ -93,6 +94,7 @@ build_and_run_rancher()
             echo -e "-----K3S-LOG-DUMP-START-----"
             cat build/testdata/k3s.log | gzip | base64 -w 0
             echo -e "\n-----K3S-LOG-DUMP-END-----"
+            kubectl cluster-info dump -A -o yaml --output-directory=build/testdata/k3s-dump
             set +e
             echo Attempting to kill K3s
             pkill -e k3s
@@ -120,6 +122,7 @@ dump_rancher_logs()
   echo -e "-----RANCHER-LOG-DUMP-START-----"
   cat /tmp/rancher.log | gzip | base64 -w 0
   echo -e "\n-----RANCHER-LOG-DUMP-END-----"
+  mv /tmp/rancher.log build/testdata/rancher.log
 }
 
 # Compile Rancher
@@ -142,7 +145,7 @@ RANCHER_RUN_PID=$!
 trap cleanup exit
 
 echo "Waiting for Rancher to be healthy"
-./scripts/retry --sleep 2 --timeout 300 "curl -sf -o /dev/null http://localhost:8080/ping"
+./scripts/retry --sleep 10 --timeout 600 "curl -sf -o /dev/null http://localhost:8080/ping"
 
 echo "Waiting up to 5 minutes for rancher-webhook deployment"
 ./scripts/retry \
@@ -166,7 +169,4 @@ echo "Waiting up to 5 minutes for rancher-provisioning-capi deployment"
 echo Running provisioning-tests $RUNARG
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-go test $RUNARG -v -failfast -timeout 60m ./tests/v2prov/tests/... || {
-     dump_rancher_logs
-     exit 1
-}
+go test $RUNARG -v -failfast -timeout 2m ./tests/v2prov/tests/...

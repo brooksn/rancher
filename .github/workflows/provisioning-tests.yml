@@ -1,0 +1,96 @@
+name: Provisioning tests
+run-name: Provisioning tests ${{ inputs.test }}
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+      test:
+        description: 'Test pattern'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - "General_SystemAgentVersion"
+          - "General_WinsAgentVersion"
+          - "General_CSIProxyAgentVersion"
+          - "Provisioning_Custom_OneNodeWithDelete"
+          - "Provisioning_Custom_ThreeNode"
+          - "Provisioning_Custom_UniqueRoles"
+          - "Provisioning_Custom_ThreeNodeWithTaints"
+          - "Fleet_Cluster"
+          - "Fleet_ClusterBootstrap"
+jobs:
+  provisioning_tests:
+    # strategy:
+    #   fail-fast: false
+    #   matrix:
+    #     test:
+    #     - "General_SystemAgentVersion"
+    #     # - "General_WinsAgentVersion"
+    #     # - "General_CSIProxyAgentVersion"
+    #     # - "Provisioning_Custom_OneNodeWithDelete"
+    #     # - "Provisioning_Custom_ThreeNode"
+    #     # - "Provisioning_Custom_UniqueRoles"
+    #     # - "Provisioning_Custom_ThreeNodeWithTaints"
+    #     # - "Fleet_Cluster"
+    #     # - "Fleet_ClusterBootstrap"
+    name: Provisioning tests
+    
+    runs-on: ubuntu-latest
+    # runs-on: [self-hosted, linux, ubuntu-18.04, ec2-ephemeral]
+    steps:
+      - name: Space
+        run: df -h
+      - name: Prune
+        run: |
+          docker image ls -a
+          docker system prune -a -f
+          docker image ls -a
+          df -h
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 5
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      - name: Say hello
+        run: echo "Running tests"
+      - name: Install Dapper
+        run: |
+          curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > /usr/local/bin/dapper
+          chmod +x /usr/local/bin/dapper
+      - name: Dapper version
+        run: dapper --version
+      - name: Docker version
+        run: docker version
+      - name: Run dapper
+        run: dapper provisioning-tests
+        env:
+          V2PROV_TEST_RUN_REGEX: "^Test_${{ inputs.test }}.*"
+      - name: ls
+        if: always()
+        run: ls -al build/testdata
+      - name: Upload testdata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.test }}-testdata
+          path: |
+            build/testdata/rancher.log
+            build/testdata/k3s.log
+            build/testdata/k3s-dump
+      - name: Space
+        run: df -h
+      - name: Prune
+        run: |
+          docker image ls -a
+          docker system prune -a -f
+          docker image ls -a
+          df -h
+      - name: Say goodbye
+        run: |
+          echo "Tests completed"

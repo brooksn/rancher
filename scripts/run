@@ -6,16 +6,22 @@ cd $(dirname $0)/..
 
 CMD=bin/rancher
 if [ ! -x $CMD ]; then
+    echo "Building rancher"
     ./scripts/build-server
+    echo "built rancher"
 fi
 
 if [ ! -z $1 ] && ( [ $1 = "--trace" ] || [ $1 = "--info" ] || [ $1 = "--debug" ] ); then
   LOGFLAG=$1
 fi
+echo "LOGFLAG: $LOGFLAG"
 
-rm -rf build/testdata
 mkdir -p build/testdata
+echo "mkdir"
+rm -rf build/testdata/*
+echo "rm"
 cd build/testdata
+echo "cd"
 export KUBECONFIG=
 export CATTLE_DEV_MODE=yes
 export CATTLE_SERVER_URL="https://$(ip route get 8.8.8.8 | awk '{print $7}'):8443"
