@@ -23,6 +23,7 @@ on:
           - "Provisioning_Custom_ThreeNodeWithTaints"
           - "Fleet_Cluster"
           - "Fleet_ClusterBootstrap"
+          - "(General|Provisioning)_"
 jobs:
   provisioning_tests:
     # strategy:
