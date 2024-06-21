@@ -89,10 +89,10 @@ jobs:
         run: echo "Running tests"
       - name: Install Dapper
         run: |
-          curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > .dapper
-          chmod +x .dapper
+          curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > ./.dapper
+          chmod +x ./.dapper
       - name: Dapper version
-        run: dapper --version
+        run: ./.dapper --version
       - name: Docker version
         run: docker version
       - name: Run dapper
