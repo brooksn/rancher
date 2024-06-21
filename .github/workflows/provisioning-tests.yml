@@ -43,20 +43,48 @@ jobs:
     # runs-on: ubuntu-latest
     runs-on: [self-hosted, linux, ubuntu-18.04, ec2-ephemeral]
     steps:
-      - name: Space
-        run: df -h
-      - name: Prune
+      - name: Custom Checkout
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
         run: |
-          docker image ls -a
-          docker system prune -a -f
-          docker image ls -a
-          df -h
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 5
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+          #!/bin/bash
+          set -e
+
+          # Clone the repository
+          git clone --filter=blob:none --no-checkout --depth 1 \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git" .
+
+          # Checkout the specific ref
+          git checkout --progress --force "${REF#refs/heads/}"
+
+          # Update submodules
+          git submodule sync --recursive
+          git submodule update --init --force --depth=1 --recursive
+
+          # Set safe directory
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          # Set up Git identity (optional, but can be useful)
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          echo "Repository checked out successfully"
+      # - name: Space
+      #   run: df -h
+      # - name: Prune
+      #   run: |
+      #     docker image ls -a
+      #     docker system prune -a -f
+      #     docker image ls -a
+      #     df -h
+      # - name: Checkout
+      #   uses: actions/checkout@v4
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   timeout-minutes: 5
+      #   iff: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: Say hello
         run: echo "Running tests"
       - name: Install Dapper
@@ -83,14 +111,14 @@ jobs:
             build/testdata/rancher.log
             build/testdata/k3s.log
             build/testdata/k3s-dump
-      - name: Space
-        run: df -h
-      - name: Prune
-        run: |
-          docker image ls -a
-          docker system prune -a -f
-          docker image ls -a
-          df -h
+      # - name: Space
+      #   run: df -h
+      # - name: Prune
+      #   run: |
+      #     docker image ls -a
+      #     docker system prune -a -f
+      #     docker image ls -a
+      #     df -h
       - name: Say goodbye
         run: |
           echo "Tests completed"
