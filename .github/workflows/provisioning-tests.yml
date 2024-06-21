@@ -96,21 +96,21 @@ jobs:
       - name: Docker version
         run: docker version
       - name: Run dapper
-        run: ./.dapper -m bind provisioning-tests
+        run: ./.dapper provisioning-tests
         env:
           V2PROV_TEST_RUN_REGEX: "^Test_${{ inputs.test }}.*"
       - name: ls
         if: always()
         run: ls -al build/testdata
-      - name: Upload testdata
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.test }}-testdata
-          path: |
-            build/testdata/rancher.log
-            build/testdata/k3s.log
-            build/testdata/k3s-dump
+      # - name: Upload testdata
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ inputs.test }}-testdata
+      #     path: |
+      #       build/testdata/rancher.log
+      #       build/testdata/k3s.log
+      #       build/testdata/k3s-dump
       # - name: Space
       #   run: df -h
       # - name: Prune
