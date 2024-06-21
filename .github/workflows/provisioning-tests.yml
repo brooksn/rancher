@@ -40,8 +40,8 @@ jobs:
     #     # - "Fleet_ClusterBootstrap"
     name: Provisioning tests
     
-    runs-on: ubuntu-latest
-    # runs-on: [self-hosted, linux, ubuntu-18.04, ec2-ephemeral]
+    # runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ubuntu-18.04, ec2-ephemeral]
     steps:
       - name: Space
         run: df -h
