@@ -89,14 +89,14 @@ jobs:
         run: echo "Running tests"
       - name: Install Dapper
         run: |
-          curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > /usr/local/bin/dapper
-          chmod +x /usr/local/bin/dapper
+          curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > .dapper
+          chmod +x .dapper
       - name: Dapper version
         run: dapper --version
       - name: Docker version
         run: docker version
       - name: Run dapper
-        run: dapper -m bind provisioning-tests
+        run: ./.dapper -m bind provisioning-tests
         env:
           V2PROV_TEST_RUN_REGEX: "^Test_${{ inputs.test }}.*"
       - name: ls
