@@ -1,44 +1,49 @@
 name: Provisioning tests
-run-name: Provisioning tests ${{ inputs.test }}
+# run-name: Provisioning tests ${{ inputs.test }}
 on:
   workflow_dispatch:
-    inputs:
-      debug_enabled:
-        type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-        required: false
-        default: false
-      test:
-        description: 'Test pattern'
-        required: true
-        default: 'development'
-        type: choice
-        options:
-          - "General_SystemAgentVersion"
-          - "General_WinsAgentVersion"
-          - "General_CSIProxyAgentVersion"
-          - "Provisioning_Custom_OneNodeWithDelete"
-          - "Provisioning_Custom_ThreeNode"
-          - "Provisioning_Custom_UniqueRoles"
-          - "Provisioning_Custom_ThreeNodeWithTaints"
-          - "Fleet_Cluster"
-          - "Fleet_ClusterBootstrap"
-          - "(General|Provisioning)_"
+    # inputs:
+      # debug_enabled:
+      #   type: boolean
+      #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+      #   required: false
+      #   default: false
+      # test:
+      #   description: 'Test pattern'
+      #   required: true
+      #   default: 'development'
+      #   type: choice
+      #   options:
+      #     - "General_SystemAgentVersion"
+      #     - "General_WinsAgentVersion"
+      #     - "General_CSIProxyAgentVersion"
+      #     - "Provisioning_Custom_OneNodeWithDelete"
+      #     - "Provisioning_Custom_ThreeNode"
+      #     - "Provisioning_Custom_UniqueRoles"
+      #     - "Provisioning_Custom_ThreeNodeWithTaints"
+      #     - "Fleet_Cluster"
+      #     - "Fleet_ClusterBootstrap"
+      #     - "(General|Provisioning)_"
 jobs:
   provisioning_tests:
-    # strategy:
-    #   fail-fast: false
-    #   matrix:
-    #     test:
-    #     - "General_SystemAgentVersion"
-    #     # - "General_WinsAgentVersion"
-    #     # - "General_CSIProxyAgentVersion"
-    #     # - "Provisioning_Custom_OneNodeWithDelete"
-    #     # - "Provisioning_Custom_ThreeNode"
-    #     # - "Provisioning_Custom_UniqueRoles"
-    #     # - "Provisioning_Custom_ThreeNodeWithTaints"
-    #     # - "Fleet_Cluster"
-    #     # - "Fleet_ClusterBootstrap"
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - "^Test_(General|Provisioning)_.*"
+          - "^Test_Operation_SetB_.*$"
+        dist:
+          - "k3s"
+          - "rke2"
+        # - "General_SystemAgentVersion"
+        # - "General_WinsAgentVersion"
+        # - "General_CSIProxyAgentVersion"
+        # - "Provisioning_Custom_OneNodeWithDelete"
+        # - "Provisioning_Custom_ThreeNode"
+        # - "Provisioning_Custom_UniqueRoles"
+        # - "Provisioning_Custom_ThreeNodeWithTaints"
+        # - "Fleet_Cluster"
+        # - "Fleet_ClusterBootstrap"
     name: Provisioning tests
     
     # runs-on: ubuntu-latest
@@ -99,7 +104,7 @@ jobs:
       - name: Run dapper
         run: ./.dapper provisioning-tests
         env:
-          V2PROV_TEST_RUN_REGEX: "^Test_${{ inputs.test }}.*"
+          V2PROV_TEST_RUN_REGEX: "${{ inputs.test }}"
       - name: ls
         if: always()
         run: ls -al build/testdata
