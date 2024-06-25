@@ -104,7 +104,8 @@ jobs:
       - name: Run dapper
         run: ./.dapper provisioning-tests
         env:
-          V2PROV_TEST_RUN_REGEX: "${{ inputs.test }}"
+          V2PROV_TEST_RUN_REGEX: "${{ matrix.test }}"
+          V2PROV_TEST_DIST: "${{ matrix.dist }}"
       - name: ls
         if: always()
         run: ls -al build/testdata
