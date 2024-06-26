@@ -52,8 +52,8 @@ jobs:
       - name: Run tests
         run: ./.dapper provisioning-tests
         env:
-          V2PROV_TEST_RUN_REGEX: "${{ inputs.test_pattern }}"
-          V2PROV_TEST_DIST: "${{ inputs.test_dist }}"
+          V2PROV_TEST_RUN_REGEX: "${{ matrix.test_pattern }}"
+          V2PROV_TEST_DIST: "${{ matrix.test_dist }}"
       - name: ls
         if: failure()
         run: ls -al build/testdata
@@ -61,7 +61,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.test_pattern }}-${{ inputs.test_dist }}-testdata
+          name: ${{ github.job }}-testdata
           path: |
             build/testdata/rancher.log
             build/testdata/k3s.log
