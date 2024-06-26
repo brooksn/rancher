@@ -30,6 +30,8 @@ jobs:
           sudo apt install -y git
       - name: Checkout
         uses: actions/checkout@v4
+      - name: testdata
+        run: mkdir -p build/testdata
       - name: Install Dapper
         run: |
           curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > ./.dapper
