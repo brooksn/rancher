@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
     name: Provisioning tests 
-    runs-on: [self-hosted, ubuntu-18.04, ec2-ephemeral]
+    runs-on: [self-hosted, linux, ubuntu-18.04, ec2-ephemeral]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
