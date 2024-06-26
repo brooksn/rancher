@@ -1,131 +1,48 @@
 name: Provisioning tests
-# run-name: Provisioning tests ${{ inputs.test }}
+run-name: Provisioning tests ${{ inputs.test_dist }} ${{ inputs.test_pattern }}
 on:
   workflow_dispatch:
-    # inputs:
-      # debug_enabled:
-      #   type: boolean
-      #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-      #   required: false
-      #   default: false
-      # test:
-      #   description: 'Test pattern'
-      #   required: true
-      #   default: 'development'
-      #   type: choice
-      #   options:
-      #     - "General_SystemAgentVersion"
-      #     - "General_WinsAgentVersion"
-      #     - "General_CSIProxyAgentVersion"
-      #     - "Provisioning_Custom_OneNodeWithDelete"
-      #     - "Provisioning_Custom_ThreeNode"
-      #     - "Provisioning_Custom_UniqueRoles"
-      #     - "Provisioning_Custom_ThreeNodeWithTaints"
-      #     - "Fleet_Cluster"
-      #     - "Fleet_ClusterBootstrap"
-      #     - "(General|Provisioning)_"
+    inputs:
+      test_pattern:
+        description: "Test pattern"
+        required: false
+        default: "^Test_(General|Provisioning|Fleet)_.*$"
+        type: string
+      test_dist:
+        description: "Distribution"
+        required: false
+        default: "k3s"
+        type: choice
+        options:
+          - "k3s"
+          - "rke2"
 jobs:
   provisioning_tests:
     strategy:
       fail-fast: false
-      matrix:
-        test:
-          - "^Test_(General|Provisioning)_.*"
-          - "^Test_Operation_SetB_.*$"
-        dist:
-          - "k3s"
-          - "rke2"
-        # - "General_SystemAgentVersion"
-        # - "General_WinsAgentVersion"
-        # - "General_CSIProxyAgentVersion"
-        # - "Provisioning_Custom_OneNodeWithDelete"
-        # - "Provisioning_Custom_ThreeNode"
-        # - "Provisioning_Custom_UniqueRoles"
-        # - "Provisioning_Custom_ThreeNodeWithTaints"
-        # - "Fleet_Cluster"
-        # - "Fleet_ClusterBootstrap"
-    name: Provisioning tests
-    
-    # runs-on: ubuntu-latest
-    runs-on: [self-hosted, linux, ubuntu-18.04, ec2-ephemeral]
+    name: Provisioning tests 
+    runs-on: [self-hosted, ubuntu-18.04, ec2-ephemeral]
     steps:
-      - name: Custom Checkout
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          REF: ${{ github.ref }}
-        run: |
-          #!/bin/bash
-          set -e
-
-          # Clone the repository
-          git clone --filter=blob:none --no-checkout --depth 1 \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git" .
-
-          # Checkout the specific ref
-          git checkout --progress --force "${REF#refs/heads/}"
-
-          # Update submodules
-          git submodule sync --recursive
-          git submodule update --init --force --depth=1 --recursive
-
-          # Set safe directory
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-          # Set up Git identity (optional, but can be useful)
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-
-          echo "Repository checked out successfully"
-      # - name: Space
-      #   run: df -h
-      # - name: Prune
-      #   run: |
-      #     docker image ls -a
-      #     docker system prune -a -f
-      #     docker image ls -a
-      #     df -h
-      # - name: Checkout
-      #   uses: actions/checkout@v4
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   timeout-minutes: 5
-      #   iff: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-      - name: Say hello
-        run: echo "Running tests"
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Install Dapper
         run: |
           curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > ./.dapper
           chmod +x ./.dapper
-      - name: Dapper version
-        run: ./.dapper --version
-      - name: Docker version
-        run: docker version
-      - name: Run dapper
+      - name: Run tests
         run: ./.dapper provisioning-tests
         env:
-          V2PROV_TEST_RUN_REGEX: "${{ matrix.test }}"
-          V2PROV_TEST_DIST: "${{ matrix.dist }}"
+          V2PROV_TEST_RUN_REGEX: "${{ inputs.test_pattern }}"
+          V2PROV_TEST_DIST: "${{ inputs.test_dist }}"
       - name: ls
         if: always()
         run: ls -al build/testdata
-      # - name: Upload testdata
-      #   if: always()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ inputs.test }}-testdata
-      #     path: |
-      #       build/testdata/rancher.log
-      #       build/testdata/k3s.log
-      #       build/testdata/k3s-dump
-      # - name: Space
-      #   run: df -h
-      # - name: Prune
-      #   run: |
-      #     docker image ls -a
-      #     docker system prune -a -f
-      #     docker image ls -a
-      #     df -h
-      - name: Say goodbye
-        run: |
-          echo "Tests completed"
+      - name: Upload testdata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.test }}-testdata
+          path: |
+            build/testdata/rancher.log
+            build/testdata/k3s.log
+            build/testdata/k3s-dump
