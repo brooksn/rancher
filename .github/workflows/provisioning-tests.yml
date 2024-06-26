@@ -1,5 +1,5 @@
 name: Provisioning tests
-run-name: Provisioning tests ${{ inputs.test_dist }} ${{ inputs.test_pattern }}
+run-name: Provisioning tests
 on:
   workflow_dispatch:
     # inputs:
