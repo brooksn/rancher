@@ -37,7 +37,7 @@ jobs:
           curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > ./.dapper
           chmod +x ./.dapper
       - name: Run tests
-        run: ./.dapper provisioning-tests
+        run: ./.dapper -m bind provisioning-tests
         env:
           V2PROV_TEST_RUN_REGEX: "${{ inputs.test_pattern }}"
           V2PROV_TEST_DIST: "${{ inputs.test_dist }}"
