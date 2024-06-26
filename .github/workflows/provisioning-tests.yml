@@ -2,24 +2,37 @@ name: Provisioning tests
 run-name: Provisioning tests ${{ inputs.test_dist }} ${{ inputs.test_pattern }}
 on:
   workflow_dispatch:
-    inputs:
-      test_pattern:
-        description: "Test pattern"
-        required: false
-        default: "^Test_(General|Provisioning|Fleet)_.*$"
-        type: string
-      test_dist:
-        description: "Distribution"
-        required: false
-        default: "k3s"
-        type: choice
-        options:
-          - "k3s"
-          - "rke2"
+    # inputs:
+    #   test_pattern:
+    #     description: "Test pattern"
+    #     required: false
+    #     default: "^Test_(General|Provisioning|Fleet)_.*$"
+    #     type: string
+    #   test_dist:
+    #     description: "Distribution"
+    #     required: false
+    #     default: "k3s"
+    #     type: choice
+    #     options:
+    #       - "k3s"
+    #       - "rke2"
 jobs:
   provisioning_tests:
     strategy:
       fail-fast: false
+      matrix:
+        include:
+        - test_dist: "k3s"
+          test_pattern: "^Test_(General|Provisioning)_.*$"
+        - test_dist: "rke2"
+          test_pattern: "^Test_(General|Provisioning)_.*$"
+        - test_dist: "k3s"
+          test_pattern: "^Test_Operation_.*$"
+        - test_dist: "rke2"
+          test_pattern: "^Test_Operation_SetA_.*$"
+        - test_dist: "rke2"
+          test_pattern: "^Test_Operation_SetB_.*$"
+        
     name: Provisioning tests 
     runs-on: [self-hosted, linux, ubuntu-18.04, ec2-ephemeral]
     steps:
